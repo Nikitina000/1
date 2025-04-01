@@ -1,0 +1,160 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "id": "b65318ae",
+      "metadata": {
+        "id": "b65318ae"
+      },
+      "source": [
+        "# Классификация данных о заболеваниях печени (АСУз-20, Доркин Владислав Дмитриевич, 5 вариант)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "id": "d61c38fe",
+      "metadata": {
+        "id": "d61c38fe"
+      },
+      "source": [
+        "\n",
+        "В этой лабораторной решается задача бинарной классификации: определение наличия заболевания печени у пациента на основе медицинских показателей.\n",
+        "\n",
+        "Будут применены следующие алгоритмы:\n",
+        "- Логистическая регрессия\n",
+        "- Метод опорных векторов (SVM)\n",
+        "- Дерево решений\n",
+        "- Метод k ближайших соседей (kNN)\n",
+        "\n",
+        "Также будет проведено сравнение моделей по метрикам `accuracy`, `precision`, `recall`, `f1-score`.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "id": "fbe32716",
+      "metadata": {
+        "id": "fbe32716"
+      },
+      "outputs": [],
+      "source": [
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn.preprocessing import LabelEncoder, StandardScaler\n",
+        "from sklearn.linear_model import LogisticRegression\n",
+        "from sklearn.svm import SVC\n",
+        "from sklearn.tree import DecisionTreeClassifier\n",
+        "from sklearn.neighbors import KNeighborsClassifier\n",
+        "from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, f1_score"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "id": "aae20349",
+      "metadata": {
+        "id": "aae20349"
+      },
+      "source": [
+        "## Загрузка и предобработка данных"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "id": "5dd6496f",
+      "metadata": {
+        "id": "5dd6496f"
+      },
+      "outputs": [],
+      "source": [
+        "df = pd.read_csv(\"indian_liver_patient_dataset (1).csv\")\n",
+        "df = df.dropna()\n",
+        "df['gender'] = LabelEncoder().fit_transform(df['gender'])\n",
+        "X = df.drop('class', axis=1)\n",
+        "y = df['class'].apply(lambda x: 1 if x == 1 else 0)\n",
+        "\n",
+        "scaler = StandardScaler()\n",
+        "X_scaled = scaler.fit_transform(X)\n",
+        "X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "id": "2c7337aa",
+      "metadata": {
+        "id": "2c7337aa"
+      },
+      "source": [
+        "## Обучение и сравнение моделей"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "id": "5ea049f3",
+      "metadata": {
+        "id": "5ea049f3"
+      },
+      "outputs": [],
+      "source": [
+        "models = {\n",
+        "    \"Logistic Regression\": LogisticRegression(),\n",
+        "    \"SVM\": SVC(),\n",
+        "    \"Decision Tree\": DecisionTreeClassifier(),\n",
+        "    \"kNN\": KNeighborsClassifier()\n",
+        "}\n",
+        "\n",
+        "results = []\n",
+        "\n",
+        "for name, model in models.items():\n",
+        "    model.fit(X_train, y_train)\n",
+        "    y_pred = model.predict(X_test)\n",
+        "    results.append({\n",
+        "        \"Model\": name,\n",
+        "        \"Accuracy\": accuracy_score(y_test, y_pred),\n",
+        "        \"Precision\": precision_score(y_test, y_pred),\n",
+        "        \"Recall\": recall_score(y_test, y_pred),\n",
+        "        \"F1 Score\": f1_score(y_test, y_pred)\n",
+        "    })\n",
+        "\n",
+        "results_df = pd.DataFrame(results).sort_values(by=\"F1 Score\", ascending=False).reset_index(drop=True)\n",
+        "results_df"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "id": "cf437cd5",
+      "metadata": {
+        "id": "cf437cd5"
+      },
+      "source": [
+        "## Выводы"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "id": "8dc8bd50",
+      "metadata": {
+        "id": "8dc8bd50"
+      },
+      "source": [
+        "На основе сравнения метрик, лучшей моделью оказалась **SVM**, показавшая наивысший `F1 Score`.\n",
+        "\n",
+        "| Model               |   Accuracy |   Precision |   Recall |   F1 Score |\n",
+        "|:--------------------|-----------:|------------:|---------:|-----------:|\n",
+        "| SVM                 |   0.74359  |    0.74359  | 1        |   0.852941 |\n",
+        "| Logistic Regression |   0.74359  |    0.771429 | 0.931034 |   0.84375  |\n",
+        "| kNN                 |   0.735043 |    0.811111 | 0.83908  |   0.824859 |\n",
+        "| Decision Tree       |   0.692308 |    0.831169 | 0.735632 |   0.780488 |\n"
+      ]
+    }
+  ],
+  "metadata": {
+    "colab": {
+      "provenance": []
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}
